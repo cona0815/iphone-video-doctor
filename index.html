@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>影片轉圈圈健檢 · iPhone</title>
+<style>
+:root{
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb; --surface-2:#f2f2ef;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --series-1:#2a78d6; --series-2:#eb6834;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --good-ink:#006300; --warn-ink:#7a5400; --serious-ink:#9c3f16; --crit-ink:#a52020;
+  --good-bg:rgba(12,163,12,.10); --warn-bg:rgba(250,178,25,.14);
+  --serious-bg:rgba(236,131,90,.14); --crit-bg:rgba(208,59,59,.10);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --series-1:#3987e5; --series-2:#d95926;
+    --good-ink:#0ca30c; --warn-ink:#fab219; --serious-ink:#ec835a; --crit-ink:#e07070;
+    --good-bg:rgba(12,163,12,.14); --warn-bg:rgba(250,178,25,.14);
+    --serious-bg:rgba(236,131,90,.14); --crit-bg:rgba(208,59,59,.16);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0d0d; --surface:#1a1a19; --surface-2:#232322;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --series-1:#3987e5; --series-2:#d95926;
+  --good-ink:#0ca30c; --warn-ink:#fab219; --serious-ink:#ec835a; --crit-ink:#e07070;
+  --good-bg:rgba(12,163,12,.14); --warn-bg:rgba(250,178,25,.14);
+  --serious-bg:rgba(236,131,90,.14); --crit-bg:rgba(208,59,59,.16);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--plane); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif;
+  font-size:16px; line-height:1.65; letter-spacing:.01em;
+  -webkit-text-size-adjust:100%;
+  padding:0 0 env(safe-area-inset-bottom);
+}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 64px}
+h1{font-size:1.45rem;line-height:1.35;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:1.05rem;margin:0 0 10px;letter-spacing:-.005em}
+h3{font-size:.95rem;margin:0 0 6px}
+p{margin:0 0 10px}
+.sub{color:var(--ink-2);font-size:.9rem;margin:0 0 18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:0 0 14px}
+.muted{color:var(--muted);font-size:.8rem}
+.ink2{color:var(--ink-2)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:block;width:100%;border:0;border-radius:12px;
+  background:var(--series-1);color:#fff;font:inherit;font-weight:650;
+  padding:16px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--border);font-weight:550;padding:12px}
+.btn.small{padding:10px;font-size:.9rem}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.78rem;color:var(--ink-2);cursor:pointer}
+
+/* ---------- progress ---------- */
+.bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:10px 0 8px}
+.bar>i{display:block;height:100%;background:var(--series-1);width:0;transition:width .35s ease;border-radius:999px}
+.steps{list-style:none;margin:12px 0 0;padding:0;font-size:.9rem}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:5px 0;color:var(--muted)}
+.steps li .m{width:1.3em;flex:0 0 1.3em;text-align:center}
+.steps li.active{color:var(--ink);font-weight:600}
+.steps li.done{color:var(--ink-2)}
+
+/* ---------- verdict ---------- */
+.verdict{border-radius:var(--radius);padding:18px;border:1px solid var(--border);margin:0 0 14px}
+.verdict.good{background:var(--good-bg)} .verdict.warning{background:var(--warn-bg)}
+.verdict.serious{background:var(--serious-bg)} .verdict.critical{background:var(--crit-bg)}
+.verdict .lbl{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.verdict h2{font-size:1.3rem;margin:8px 0 6px;line-height:1.4}
+.verdict p{margin:0;font-size:.95rem;color:var(--ink-2)}
+.dot{width:.7em;height:.7em;border-radius:50%;display:inline-block;flex:0 0 auto}
+
+/* ---------- stat tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 14px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 13px}
+.tile .k{font-size:.76rem;color:var(--muted);display:block;margin-bottom:3px}
+.tile .v{font-size:1.5rem;font-weight:680;line-height:1.15;letter-spacing:-.02em}
+.tile .v small{font-size:.72rem;font-weight:500;color:var(--muted);margin-left:3px;letter-spacing:0}
+.tile .s{font-size:.76rem;margin-top:3px;display:flex;align-items:center;gap:5px}
+
+/* ---------- meters ---------- */
+.meter{margin:0 0 15px}
+.meter .head{display:flex;justify-content:space-between;align-items:baseline;font-size:.87rem;margin-bottom:6px}
+.meter .head b{font-weight:620}
+.meter .head span{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.track{position:relative;height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.track i{position:absolute;top:0;bottom:0;left:0;border-radius:999px}
+.track u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--axis)}
+.meter .note{font-size:.78rem;color:var(--muted);margin-top:5px}
+
+/* ---------- chart ---------- */
+.chartbox{position:relative}
+svg{display:block;width:100%;height:auto;touch-action:pan-y}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:6px 9px;font-size:.8rem;box-shadow:0 6px 18px rgba(0,0,0,.14);white-space:nowrap;
+  transform:translate(-50%,-115%);opacity:0;transition:opacity .12s}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-variant-numeric:tabular-nums;margin-top:10px}
+th,td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+
+/* ---------- findings ---------- */
+.finding{border:1px solid var(--border);border-left-width:4px;border-radius:12px;padding:14px;margin:0 0 11px;background:var(--surface)}
+.finding.critical{border-left-color:var(--crit)} .finding.serious{border-left-color:var(--serious)}
+.finding.warning{border-left-color:var(--warn)} .finding.good{border-left-color:var(--good)}
+.finding .tag{font-size:.73rem;font-weight:700;letter-spacing:.05em;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.finding.critical .tag{color:var(--crit-ink)} .finding.serious .tag{color:var(--serious-ink)}
+.finding.warning .tag{color:var(--warn-ink)} .finding.good .tag{color:var(--good-ink)}
+.finding h3{font-size:1rem;margin:0 0 6px}
+.finding p{font-size:.92rem;color:var(--ink-2);margin:0 0 8px}
+.ev{font-size:.8rem;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:7px 10px;margin:0 0 10px}
+ol.acts{margin:0;padding-left:1.25em;font-size:.9rem}
+ol.acts li{margin:0 0 8px}
+.path{display:inline-block;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+  padding:1px 6px;font-size:.84em;color:var(--ink);white-space:normal}
+.why{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+
+details{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:0;margin:0 0 10px}
+details>summary{list-style:none;cursor:pointer;padding:13px 15px;font-weight:600;font-size:.95rem;display:flex;justify-content:space-between;gap:10px;align-items:center}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"＋";color:var(--muted);font-weight:400}
+details[open]>summary::after{content:"－"}
+details .body{padding:0 15px 15px;font-size:.9rem;color:var(--ink-2)}
+.hitrate{font-size:.72rem;color:var(--muted);font-weight:500;white-space:nowrap}
+
+video{width:100%;max-height:190px;background:#000;border-radius:10px;display:block;object-fit:contain}
+.hidden{display:none!important}
+.legendrow{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--ink-2);margin-top:8px}
+.legendrow span{display:flex;align-items:center;gap:5px}
+.swatch{width:12px;height:3px;border-radius:2px;display:inline-block}
+.foot{font-size:.78rem;color:var(--muted);margin-top:26px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div>
+      <h1>影片轉圈圈健檢</h1>
+      <div class="muted">iPhone · IG / FB 影片緩衝診斷</div>
+    </div>
+    <button class="chip" id="themeBtn" type="button">深／淺色</button>
+  </div>
+
+  <!-- ============ INTRO ============ -->
+  <section id="intro">
+    <div class="card">
+      <h2>這個工具在做什麼</h2>
+      <p class="ink2" style="font-size:.93rem">影片轉圈圈有四個可能的卡點，一般人分不出是哪一個。這支工具會在你手機上跑一次約 <b>70 秒</b>的實測，逐一量出來，再告訴你卡在哪、該怎麼改。</p>
+      <ol class="acts ink2" style="font-size:.9rem;margin-top:10px">
+        <li><b>網路夠不夠快</b> — 下載速度撐不撐得起 1080p</li>
+        <li><b>線路穩不穩</b> — 抖動與斷包，速度夠也會轉圈</li>
+        <li><b>連得到 IG／FB 的伺服器嗎</b> — 跟其他網站比，是不是特別慢</li>
+        <li><b>真的放一段影片試試</b> — 直接重現轉圈，數它轉幾次</li>
+      </ol>
+      <p class="muted" style="margin-top:12px">測試會用掉約 30–80 MB 流量。建議在你「最常轉圈」的環境下測（在家就連家裡 Wi‑Fi、在外就用行動網路），測完可以換另一種網路再測一次比較。</p>
+    </div>
+    <details style="margin-bottom:14px"><summary><span>要在 iPhone 上怎麼打開這個檔案？</span></summary>
+      <div class="body">
+        <p style="margin-bottom:8px"><b>最準的做法：用 Safari 開。</b>把這個 <code>.html</code> 檔存到 iPhone 的「檔案」App（從 Claude 的下載按鈕存，或用 AirDrop／LINE 傳給自己），再到「檔案」App 點一下它，選用 Safari 開啟。</p>
+        <p style="margin-bottom:0">在 Claude App 裡直接預覽也可以測，數字會稍微保守一點。<b>不建議</b>從 IG／FB／LINE 的連結點開（那是 App 內建瀏覽器，測不準）——工具偵測到時會提醒你。</p>
+      </div>
+    </details>
+    <button class="btn" id="startBtn" type="button">開始檢測（約 70 秒）</button>
+    <p class="muted" style="text-align:center;margin-top:10px">過程請讓螢幕保持亮著、不要切換 App</p>
+  </section>
+
+  <!-- ============ RUNNING ============ -->
+  <section id="running" class="hidden">
+    <div class="card">
+      <h2 id="stageTitle">準備中…</h2>
+      <div class="bar"><i id="progBar"></i></div>
+      <div class="muted" id="stageHint">—</div>
+      <ul class="steps" id="stepList"></ul>
+    </div>
+    <div class="card" id="videoCard">
+      <h3>實測播放</h3>
+      <p class="muted" style="margin-bottom:10px">下面這段影片就是在模擬你看 IG／FB 的情況。如果它也在轉圈，代表問題被重現了。</p>
+      <video id="vid" muted playsinline webkit-playsinline preload="auto"></video>
+      <div class="muted" id="vidStatus" style="margin-top:8px">尚未開始</div>
+    </div>
+    <button class="btn ghost" id="abortBtn" type="button">中止檢測</button>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="result" class="hidden"></section>
+
+  <div class="foot" id="footNote"></div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   影片轉圈圈健檢 — 單檔診斷工具
+   無外部相依、無 localStorage、全部在記憶體內。
+   ========================================================================= */
+
+/* ---------------- theme toggle ---------------- */
+(function(){
+  var b=document.getElementById('themeBtn');
+  b.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var dark=cur? cur==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+    if(window.__redraw) window.__redraw();
+  });
+})();
+
+/* ---------------- small utils ---------------- */
+var $=function(s){return document.querySelector(s)};
+var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+var now=function(){return performance.now()};
+function median(a){ if(!a||!a.length) return null; var s=a.slice().sort(function(x,y){return x-y}); var m=s.length>>1;
+  return s.length%2? s[m] : (s[m-1]+s[m])/2; }
+function mean(a){ return (!a||!a.length)?null:a.reduce(function(x,y){return x+y},0)/a.length; }
+function fmt(v,d){ if(v==null||!isFinite(v)) return '—'; return v.toFixed(d==null?1:d); }
+function timeoutCtl(ms){ var c=new AbortController(); var id=setTimeout(function(){try{c.abort()}catch(e){}},ms);
+  return {signal:c.signal, clear:function(){clearTimeout(id)}}; }
+function cb(u){ return u + (u.indexOf('?')>-1?'&':'?') + 'cb=' + Math.random().toString(36).slice(2) + Date.now(); }
+
+var ABORTED=false;
+function checkAbort(){ if(ABORTED) throw new Error('aborted'); }
+
+/* =========================================================================
+   1. 環境
+   ========================================================================= */
+function envScan(){
+  var ua=navigator.userAgent||'';
+  var m=ua.match(/OS (\d+)[_.](\d+)/);
+  var isiOS=/iPhone|iPad|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection||null;
+  return {
+    ua:ua,
+    isiOS:isiOS,
+    isSafari:/Safari/.test(ua) && !/Chrome|CriOS|EdgiOS|FxiOS/.test(ua),
+    inAppBrowser:/FBAN|FBAV|Instagram|Line\//.test(ua),
+    iosVersion: m? (m[1]+'.'+m[2]) : null,
+    iosMajor: m? parseInt(m[1],10) : null,
+    screen: screen.width+'×'+screen.height+' @'+(window.devicePixelRatio||1)+'x',
+    hlsNative: !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl'),
+    connType: c? (c.effectiveType||null) : null,
+    saveData: c? !!c.saveData : null,
+    cores: navigator.hardwareConcurrency||null,
+    when: new Date().toLocaleString('zh-TW',{hour12:false})
+  };
+}
+
+/* =========================================================================
+   2. 延遲 / 抖動 / 掉包
+   ========================================================================= */
+var PING_CORS='https://speed.cloudflare.com/__down?bytes=0';
+var PING_NOCORS=['https://www.cloudflare.com/favicon.ico','https://www.google.com/favicon.ico'];
+
+async function pingOnce(url,mode){
+  var t=timeoutCtl(3000), t0=now();
+  try{
+    await fetch(cb(url), mode==='no-cors'
+      ? {mode:'no-cors',cache:'no-store',signal:t.signal}
+      : {cache:'no-store',signal:t.signal});
+    t.clear(); return now()-t0;
+  }catch(e){ t.clear(); return null; }
+}
+
+async function pingTest(n,onTick){
+  // 先確認哪一種量測方式可用；單次失敗可能只是掉包，最多重試 3 次才降級
+  var mode='cors', url=PING_CORS, okProbe=false, a;
+  for(a=0;a<3 && !okProbe;a++){ if(await pingOnce(url,'cors')!=null) okProbe=true; }
+  if(!okProbe){
+    mode='no-cors';
+    for(var h=0; h<PING_NOCORS.length && !okProbe; h++){
+      url=PING_NOCORS[h];
+      for(a=0;a<2 && !okProbe;a++){ if(await pingOnce(url,'no-cors')!=null) okProbe=true; }
+    }
+  }
+  var rtts=[],fails=0;
+  for(var i=0;i<n;i++){
+    checkAbort();
+    var r=await pingOnce(url,mode);
+    if(r==null) fails++; else rtts.push(r);
+    if(onTick) onTick((i+1)/n);
+    await sleep(120);
+  }
+  var jit=null;
+  if(rtts.length>2){ var d=[]; for(var k=1;k<rtts.length;k++) d.push(Math.abs(rtts[k]-rtts[k-1])); jit=mean(d); }
+  return {
+    ok: rtts.length>0,
+    median: median(rtts), min: rtts.length?Math.min.apply(null,rtts):null,
+    max: rtts.length?Math.max.apply(null,rtts):null,
+    jitter: jit, lossPct: (fails/n)*100, samples: rtts, host: url, mode: mode
+  };
+}
+
+/* =========================================================================
+   3. 影片實測（重現「轉圈圈」）
+   ========================================================================= */
+var VIDEO_SOURCES=[
+  {url:'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8', type:'hls'},
+  {url:'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', type:'hls'},
+  {url:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', type:'mp4'},
+  {url:'https://www.w3schools.com/html/mov_bbb.mp4', type:'mp4'}
+];
+
+function videoTest(v,durationMs,onStatus,hlsNative){
+  return new Promise(function(resolve){
+    var list=VIDEO_SOURCES.filter(function(s){ return s.type==='mp4' || hlsNative; });
+    var idx=-1, finished=false;
+    var res={ok:false,startupMs:null,stalls:0,stallSec:0,height:null,width:null,
+              played:0,wall:0,ratio:null,source:null,error:null};
+
+    function cleanup(){ try{v.pause()}catch(e){} v.removeAttribute('src'); try{v.load()}catch(e){} }
+    function done(){ if(finished) return; finished=true; cleanup(); resolve(res); }
+
+    function tryNext(){
+      idx++;
+      if(idx>=list.length){ res.error='no-playable-source'; return done(); }
+      var src=list[idx];
+      res.source=src.url;
+      var t0=now(), started=false, stallAt=null, tStart=null, maxH=0, lastT=0;
+      var guard=setTimeout(function(){ if(!started){ v.onerror=null; tryNext(); } }, 12000);
+
+      function onWaiting(){ if(started && stallAt==null){ stallAt=now(); res.stalls++;
+        if(onStatus) onStatus('轉圈中…（第 '+res.stalls+' 次）'); } }
+      function onPlaying(){
+        if(!started){ started=true; res.startupMs=now()-t0; tStart=now(); clearTimeout(guard);
+          if(onStatus) onStatus('播放中，正在觀察是否轉圈…'); }
+        if(stallAt!=null){ res.stallSec+=(now()-stallAt)/1000; stallAt=null;
+          if(onStatus) onStatus('恢復播放（已轉圈 '+res.stalls+' 次）'); }
+      }
+      function onTime(){ if(v.videoHeight>maxH){maxH=v.videoHeight; res.width=v.videoWidth;} lastT=v.currentTime; }
+      function onErr(){ clearTimeout(guard); detach(); if(!started) tryNext(); else { finish(); } }
+      function detach(){
+        v.removeEventListener('waiting',onWaiting); v.removeEventListener('stalled',onWaiting);
+        v.removeEventListener('playing',onPlaying); v.removeEventListener('timeupdate',onTime);
+        v.removeEventListener('error',onErr);
+      }
+      function finish(){
+        clearTimeout(guard); clearTimeout(endTimer); detach();
+        if(stallAt!=null){ res.stallSec+=(now()-stallAt)/1000; stallAt=null; }
+        res.ok=started; res.height=maxH||v.videoHeight||null;
+        res.played=lastT; res.wall=tStart? (now()-tStart)/1000 : 0;
+        res.ratio=(res.wall>1)? Math.min(1.2, res.played/res.wall) : null;
+        done();
+      }
+      var endTimer=setTimeout(finish,durationMs);
+
+      v.addEventListener('waiting',onWaiting); v.addEventListener('stalled',onWaiting);
+      v.addEventListener('playing',onPlaying); v.addEventListener('timeupdate',onTime);
+      v.addEventListener('error',onErr);
+
+      v.muted=true; v.setAttribute('playsinline','');
+      v.src=cb(src.url);
+      var p=v.play();
+      if(p&&p.catch) p.catch(function(){ /* autoplay 被擋 → 交給 guard/timer */ });
+      if(onStatus) onStatus('正在載入影片…');
+    }
+    tryNext();
+  });
+}
+
+/* =========================================================================
+   4. 下載速度 + 穩定度曲線
+   ========================================================================= */
+var DL_SOURCES=[
+  'https://speed.cloudflare.com/__down?bytes=209715200',
+  'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js',
+  'https://unpkg.com/three@0.160.1/build/three.module.js'
+];
+
+async function downloadTest(durationMs,onTick){
+  var samples=[], totalBytes=0, tGlobal=now(), used=null, err=null;
+  // 取樣視窗跨越整個測試（而非單一回應），否則小檔來源永遠取不到樣本
+  var winStart=tGlobal, winBytes=0, SLOT=400;
+  function sample(force){
+    var n1=now(), dt=n1-winStart;
+    if(dt>=(force?150:SLOT) && winBytes>0){
+      samples.push({t:(n1-tGlobal)/1000, mbps: winBytes*8/(dt/1000)/1e6});
+      winStart=n1; winBytes=0;
+      if(onTick) onTick(Math.min(1,(n1-tGlobal)/durationMs));
+    }
+  }
+  for(var si=0; si<DL_SOURCES.length && samples.length<3; si++){
+    var url=DL_SOURCES[si];
+    try{
+      var loops=0;
+      while(now()-tGlobal < durationMs && loops<200){
+        checkAbort(); loops++;
+        var t=timeoutCtl(Math.max(1500, durationMs-(now()-tGlobal)+2000));
+        var res=await fetch(cb(url),{cache:'no-store',signal:t.signal});
+        if(!res.ok && res.status>=400) throw new Error('http '+res.status);
+        if(!used){ used=url; winStart=now(); winBytes=0; }   // 忽略首次連線建立的時間
+        if(res.body && res.body.getReader){
+          var reader=res.body.getReader();
+          while(true){
+            var r=await reader.read();
+            if(r.done) break;
+            winBytes+=r.value.length; totalBytes+=r.value.length;
+            sample(false);
+            if(now()-tGlobal>durationMs){ try{reader.cancel()}catch(e){} break; }
+          }
+        }else{
+          var buf=await res.arrayBuffer();
+          winBytes+=buf.byteLength; totalBytes+=buf.byteLength;
+          sample(false);
+        }
+        t.clear();
+      }
+      sample(true);
+      if(samples.length>=3) break;
+    }catch(e){ err=e.message; if(e.message==='aborted') throw e; sample(true); }
+  }
+  // 只拿到很少樣本時，至少給一個整體平均值
+  if(samples.length===0 && totalBytes>0){
+    var el=(now()-tGlobal)/1000;
+    if(el>0.2) samples.push({t:el, mbps: totalBytes*8/el/1e6});
+  }
+  var vals=samples.map(function(s){return s.mbps});
+  var stable=vals.length>2? vals.slice(1) : vals;
+  var third=Math.max(1,Math.floor(stable.length/3));
+  return {
+    ok: samples.length>0,
+    mbps: median(stable), peak: vals.length?Math.max.apply(null,vals):null,
+    low: vals.length?Math.min.apply(null,vals):null,
+    head: median(stable.slice(0,third)), tail: median(stable.slice(-third)),
+    samples: samples, bytes: totalBytes, source: used, error: err
+  };
+}
+
+/* =========================================================================
+   5. 上傳速度（次要指標）
+   ========================================================================= */
+async function uploadTest(maxMs){
+  var url='https://speed.cloudflare.com/__up';
+  try{
+    var size=2*1024*1024;
+    var blob=new Blob([new Uint8Array(size)]);
+    var best=null, t0=now();
+    for(var i=0;i<4 && now()-t0<maxMs;i++){
+      checkAbort();
+      var t=timeoutCtl(Math.max(2000,maxMs-(now()-t0)));
+      var s=now();
+      var r=await fetch(cb(url),{method:'POST',body:blob,cache:'no-store',signal:t.signal});
+      t.clear();
+      var dt=(now()-s)/1000;
+      if(dt>0.05){ var m=size*8/dt/1e6; if(best==null||m>best) best=m; }
+      if(!r) break;
+    }
+    return {ok:best!=null, mbps:best};
+  }catch(e){ return {ok:false, mbps:null, error:e.message}; }
+}
+
+/* =========================================================================
+   6. IG / FB 伺服器 vs 對照組
+   ========================================================================= */
+var META_HOSTS=[
+  {n:'IG 影片伺服器', u:'https://scontent.cdninstagram.com/favicon.ico'},
+  {n:'FB 影片伺服器', u:'https://static.xx.fbcdn.net/favicon.ico'},
+  {n:'instagram.com', u:'https://www.instagram.com/favicon.ico'},
+  {n:'facebook.com',  u:'https://www.facebook.com/favicon.ico'}
+];
+var CTRL_HOSTS=[
+  {n:'Cloudflare', u:'https://www.cloudflare.com/favicon.ico'},
+  {n:'Google',     u:'https://www.google.com/favicon.ico'},
+  {n:'Apple',      u:'https://www.apple.com/favicon.ico'}
+];
+
+async function probeHost(u,rounds){
+  var ts=[],fail=0;
+  for(var i=0;i<rounds;i++){
+    checkAbort();
+    var t=timeoutCtl(4000), t0=now();
+    try{ await fetch(cb(u),{mode:'no-cors',cache:'no-store',signal:t.signal}); ts.push(now()-t0); }
+    catch(e){ fail++; }
+    t.clear(); await sleep(60);
+  }
+  return {best: ts.length?Math.min.apply(null,ts):null, first: ts.length?ts[0]:null, fail:fail, tries:rounds};
+}
+
+async function cdnTest(onTick){
+  var out={meta:[],ctrl:[]}, all=META_HOSTS.concat(CTRL_HOSTS), i=0;
+  for(var g=0; g<2; g++){
+    var list=g===0?META_HOSTS:CTRL_HOSTS, key=g===0?'meta':'ctrl';
+    for(var j=0;j<list.length;j++){
+      var r=await probeHost(list[j].u,3);
+      out[key].push({name:list[j].n, best:r.best, first:r.first, fail:r.fail, tries:r.tries});
+      i++; if(onTick) onTick(i/all.length);
+    }
+  }
+  var mv=out.meta.map(function(x){return x.best}).filter(function(x){return x!=null});
+  var cv=out.ctrl.map(function(x){return x.best}).filter(function(x){return x!=null});
+  var mf=out.meta.filter(function(x){return x.fail===x.tries}).length;
+  out.metaMs=median(mv); out.ctrlMs=median(cv);
+  out.delta=(out.metaMs!=null&&out.ctrlMs!=null)? out.metaMs-out.ctrlMs : null;
+  out.metaUnreachable=mf; out.ok=(mv.length>0||cv.length>0);
+  return out;
+}
+
+/* =========================================================================
+   7. 診斷引擎
+   ========================================================================= */
+var IOS_NOTE='（路徑驗證於 iOS 26.6，若你的版本不同，位置可能略有差異）';
+
+var FIX = {
+  lowDataWifi:{t:'關掉 Wi‑Fi 的「低數據模式」',
+    p:'設定 → Wi‑Fi → 你連的那個網路右邊的 (i) → 低數據模式 → 關閉',
+    w:'每個 Wi‑Fi 各有一個獨立開關，很多人只關了行動網路那邊。開著時系統會壓抑背景傳輸，影片就無法預先載好。'},
+  lowDataCell:{t:'關掉行動網路的「低數據模式」',
+    p:'設定 → 行動服務 → 行動數據選項 → 數據模式 → 選「標準」或「允許 5G 使用更多數據」',
+    w:'舊機型或非 5G 機型可能在「行動服務 → 行動數據選項 → 低數據模式」。'},
+  lowPower:{t:'關掉「低耗電模式」',
+    p:'設定 → 電池 → 電源模式 → 低耗電模式 → 關閉',
+    w:'低耗電模式會直接關掉 5G 與「背景 App 重新整理」，Reels／短影音就沒辦法先偷跑載入，滑到下一則才開始轉圈。電量充到 80% 會自動關閉。（iPhone 14 以前是「設定 → 電池 → 低耗電模式」）'},
+  igDataSaver:{t:'關掉 Instagram 的「使用較少行動數據」',
+    p:'Instagram → 個人檔案 → 右上角 ☰ → 設定與活動 → 資料用量與媒體品質 → 關閉「使用較少行動數據」',
+    w:'這個開關開著時，IG 不會預先下載你還沒滑到的影片，一定會轉圈。若找不到這一頁，在設定頁上方搜尋「資料」。'},
+  fbQuality:{t:'檢查 Facebook 的影片畫質設定',
+    p:'Facebook → 右上角選單 → 設定與隱私 → 設定 → 偏好設定 → 媒體 → 影片畫質',
+    w:'若被設成「資料節省模式」，影片會被強制降畫質、也可能更常緩衝。同一頁的「影片播放」建議設為「Wi‑Fi 與行動網路」。找不到就搜尋「媒體」。'},
+  appPerm:{t:'確認 IG／FB 的行動數據與背景重新整理權限',
+    p:'設定 → 一直往下滑到「App」→ Instagram（或 Facebook）→ 打開「行動數據」與「背景 App 重新整理」',
+    w:'被關掉時，App 只能在你盯著看的當下才下載，預載完全失效。'},
+  wifiBand:{t:'改用 5GHz Wi‑Fi、並靠近路由器',
+    p:'設定 → Wi‑Fi → 選擇名稱有 5G／5GHz 的那個網路',
+    w:'2.4GHz 頻段容易被微波爐、藍牙、鄰居的 Wi‑Fi 干擾，症狀正是「速度看起來夠但一直斷斷續續」。'},
+  reboot:{t:'把數據機和路由器整個斷電重開',
+    p:'拔掉電源 → 等 30 秒 → 先開數據機，等燈全亮再開路由器',
+    w:'家用路由器連續開機數週後，效能與連線數表現會明顯下滑，這是最便宜有效的一步。'},
+  resetNet:{t:'重置網路設定',
+    p:'設定 → 一般 → 傳送或重置 iPhone → 重置 → 重置網路設定',
+    w:'會清掉所有已儲存的 Wi‑Fi 密碼與 VPN／APN 設定（照片與資料不會刪），請先確認你知道家裡的 Wi‑Fi 密碼。'},
+  dns:{t:'換一組 DNS 試試',
+    p:'設定 → Wi‑Fi → (i) → 設定 DNS → 手動 → 新增伺服器 → 輸入 1.1.1.1 與 8.8.8.8',
+    w:'DNS 決定你被導到哪一台 IG／FB 的伺服器。導錯地方時，網速明明很快、IG 影片卻特別慢。這只能改 Wi‑Fi，行動網路無法這樣設。'},
+  vpn:{t:'暫時關掉 VPN 或網路過濾類 App',
+    p:'設定 → 一般 → VPN 與裝置管理 → VPN → 關閉',
+    w:'VPN 會把你的流量繞一大圈，延遲與抖動都會上升。'},
+  iosUpdate:{t:'更新 iOS',
+    p:'設定 → 一般 → 軟體更新',
+    w:'網路堆疊的問題常在小版更新中修掉。'},
+  privateRelay:{t:'（只在 Safari 看網頁版才有關）關閉 iCloud 私密轉送',
+    p:'設定 → 最上面你的名字 → iCloud → 私密轉送 → 關閉',
+    w:'誠實說明：Apple 官方文件指出私密轉送只涵蓋 Safari 瀏覽與未加密流量，IG／FB App 內的影片走加密連線、不經過它。所以這一步對「App 內轉圈」大概率無效，只有在你用 Safari 開 instagram.com 看影片時才值得試。'},
+  reinstall:{t:'（最後手段）刪除 App 再重新安裝',
+    p:'設定 → 一般 → iPhone 儲存空間 → Instagram → 刪除 App，再到 App Store 重裝',
+    w:'誠實說明：查不到任何 Apple 或 Meta 官方依據證實「快取太大造成播放問題」。而且「卸載 App」會保留資料、不保證清掉快取，要真的清空只能刪除重裝（需重新登入）。請排在最後再試。'},
+  ispCall:{t:'把這份報告的數據拿去找電信／網路業者',
+    p:'按下方「複製報告文字」，說明你的下載速度、抖動與掉包率，並要求查線路',
+    w:'掉包與抖動異常通常是線路或機房端的問題，不是你在手機上改設定能解決的。'},
+  peakHour:{t:'換時段再測一次比對',
+    p:'晚上 8–11 點是尖峰，跟中午或早上各測一次，把兩份結果比較',
+    w:'若只有尖峰慢，代表是社區共用頻寬或方案頻寬不足，要往升級方案的方向想。'},
+  planUpgrade:{t:'考慮升級網路方案或改用行動網路',
+    p:'先用「行動網路（關 Wi‑Fi）」再測一次；若行動網路明顯順很多，問題就在家裡這條線',
+    w:'IG／FB 直式短影音多為 1080p，穩定 5 Mbps 以上基本不該轉圈，低於 3 Mbps 一定會卡。'}
+};
+
+function diagnose(R){
+  var F=[], env=R.env, p=R.ping, d=R.dl, v=R.video, c=R.cdn;
+  var dl=d&&d.ok? d.mbps : null;
+  var loss=p&&p.ok? p.lossPct : null;
+  var jit=p&&p.ok? p.jitter : null;
+  var lat=p&&p.ok? p.median : null;
+  var stalls=v&&v.ok? v.stalls : null;
+
+  /* --- 0. 整條網路都不通 --- */
+  var offline = (p&&!p.ok) && (!d||!d.ok) && (!c || (c.metaMs==null&&c.ctrlMs==null));
+  if(offline){
+    return {findings:[{sev:'critical',tag:'連線',h:'測試期間手機完全連不上網路',
+      p:'所有測試項目都沒有得到回應——不只是 IG／FB，連其他網站也連不上。請確認 Wi‑Fi 或行動網路是否真的有通（打開 Safari 隨便開一個網站試試），也可能是飛航模式、VPN、或網路過濾軟體把連線全擋掉了。網路恢復後再測一次。',
+      ev:'延遲、下載、伺服器連線 三項皆無回應',
+      acts:[FIX.vpn,FIX.resetNet,FIX.reboot],noHead:false}],
+      head:{sev:'critical',lbl:'無法檢測',t:'測試期間手機完全連不上網路',
+            d:'請先確認網路有通（用 Safari 開個網站試試），再重新檢測一次。'}};
+  }
+
+  /* --- A. 頻寬 --- */
+  if(dl!=null){
+    if(dl<3) F.push({sev:'critical',tag:'第 1 關 · 網路速度',
+      h:'網路太慢，1080p 影片一定會轉圈',
+      p:'你的下載速度只有 '+fmt(dl)+' Mbps。IG／FB 的直式短影音大多是 1080p，業界參考值（Netflix 官方建議）是 1080p 需要 5 Mbps、720p 需要 3 Mbps。低於 3 Mbps 就是「影片下載的速度追不上你看的速度」，轉圈是必然的。',
+      ev:'下載 '+fmt(dl)+' Mbps（1080p 建議 ≥ 5、720p 建議 ≥ 3）',
+      acts:[FIX.wifiBand,FIX.reboot,FIX.lowDataWifi,FIX.lowDataCell,FIX.planUpgrade,FIX.peakHour]});
+    else if(dl<5.5) F.push({sev:'serious',tag:'第 1 關 · 網路速度',
+      h:'速度勉強及格，尖峰或高畫質時會卡',
+      p:'下載 '+fmt(dl)+' Mbps，看 720p 沒問題，但 1080p 就在及格邊緣。只要網路稍有波動，或家裡同時有人在用，就會開始轉圈。',
+      ev:'下載 '+fmt(dl)+' Mbps（1080p 建議 ≥ 5）',
+      acts:[FIX.wifiBand,FIX.lowDataWifi,FIX.lowDataCell,FIX.reboot,FIX.peakHour]});
+    else F.push({sev:'good',tag:'第 1 關 · 網路速度',
+      h:'網路速度足夠，這不是你轉圈的原因',
+      p:'下載 '+fmt(dl)+' Mbps，遠高於 1080p 所需的 5 Mbps。所以問題不在「不夠快」，要往下面幾項看。',
+      ev:'下載 '+fmt(dl)+' Mbps · 尖峰 '+fmt(d.peak)+' Mbps',acts:[]});
+  }else{
+    F.push({sev:'warning',tag:'第 1 關 · 網路速度',h:'這次量不到下載速度',
+      p:'測速伺服器連不上（可能被網路環境擋掉，或當下訊號中斷）。請換個網路再測一次。其他幾項結果仍然有效。',
+      ev:d&&d.error? ('錯誤：'+d.error) : '無回應',acts:[],noHead:true});
+  }
+
+  /* --- B. 速度掉落 / 降速 --- */
+  if(d&&d.ok&&d.head!=null&&d.tail!=null&&d.head>4&&d.tail/d.head<0.55){
+    F.push({sev:'serious',tag:'速度不持久',
+      h:'一開始很快，但撐不住',
+      p:'前段量到 '+fmt(d.head)+' Mbps，後段掉到 '+fmt(d.tail)+' Mbps。這種「衝一下就掉」的曲線通常代表三件事之一：吃到吃到飽的降速門檻、Wi‑Fi 訊號不穩、或路由器負載過高。這正是「影片一開始播得動，看一下就開始轉圈」的成因。',
+      ev:'前段 '+fmt(d.head)+' → 後段 '+fmt(d.tail)+' Mbps（掉了 '+fmt((1-d.tail/d.head)*100,0)+'%）',
+      acts:[FIX.wifiBand,FIX.reboot,FIX.lowDataCell,FIX.ispCall]});
+  }
+
+  /* --- C. 穩定度 --- */
+  var unstable=false;
+  if(loss!=null&&loss>=5){ unstable=true;
+    F.push({sev:'critical',tag:'第 2 關 · 線路穩定度',h:'嚴重掉包，速度再快也會轉圈',
+      p:''+fmt(loss,0)+'% 的連線請求根本沒有回應。影片播放最怕的不是慢，是「斷」——每掉一次包，播放器就得重等，畫面就是轉圈。這通常不是手機設定能解決的，是線路或訊號的問題。',
+      ev:'掉包率 '+fmt(loss,0)+'%（可接受 < 1%）',
+      acts:[FIX.wifiBand,FIX.reboot,FIX.resetNet,FIX.ispCall]});
+  }else if(loss!=null&&loss>=1){ unstable=true;
+    F.push({sev:'serious',tag:'第 2 關 · 線路穩定度',h:'有掉包，會造成間歇性轉圈',
+      p:''+fmt(loss,0)+'% 的請求沒有回應。這種程度不會讓你完全看不了，但會造成「看兩分鐘卡一下」的間歇性轉圈。',
+      ev:'掉包率 '+fmt(loss,0)+'%（可接受 < 1%）',
+      acts:[FIX.wifiBand,FIX.reboot,FIX.ispCall]});
+  }
+  if(jit!=null&&jit>=30){ unstable=true;
+    F.push({sev:'serious',tag:'第 2 關 · 線路穩定度',h:'網路抖動偏大，資料到得不平均',
+      p:'抖動 '+fmt(jit,0)+' ms（建議 < 30 ms）。抖動大代表資料包忽快忽慢地到，播放器的緩衝區會忽空忽滿，就會出現「速度測起來很快、但影片還是一直轉圈」這種最讓人困惑的情況。最常見的原因是 Wi‑Fi 干擾或訊號弱。',
+      ev:'抖動 '+fmt(jit,0)+' ms（建議 < 30 ms）· 延遲 '+fmt(lat,0)+' ms',
+      acts:[FIX.wifiBand,FIX.reboot,FIX.vpn,FIX.resetNet]});
+  }
+  if(!unstable&&p&&p.ok){
+    F.push({sev:'good',tag:'第 2 關 · 線路穩定度',h:'線路穩定，這也不是原因',
+      p:'掉包 '+fmt(loss,0)+'%、抖動 '+fmt(jit,0)+' ms，都在健康範圍。你的網路連線本身是穩的。',
+      ev:'掉包 '+fmt(loss,0)+'% · 抖動 '+fmt(jit,0)+' ms · 延遲 '+fmt(lat,0)+' ms',acts:[]});
+  }
+  if(lat!=null&&lat>300){
+    F.push({sev:'warning',tag:'延遲偏高',h:'反應時間偏慢，可能繞了遠路',
+      p:'延遲 '+fmt(lat,0)+' ms。對「有緩衝」的影片來說延遲不是致命傷，但超過 300 ms 通常代表流量被繞路了——VPN、代理、或是連到很遠的伺服器。',
+      ev:'延遲中位數 '+fmt(lat,0)+' ms',acts:[FIX.vpn,FIX.dns,FIX.privateRelay]});
+  }
+
+  /* --- D. Meta CDN --- */
+  if(c&&c.ok&&c.delta!=null){
+    if(c.delta>150) F.push({sev:'serious',tag:'第 3 關 · IG／FB 伺服器',
+      h:'連 IG／FB 的伺服器明顯比別家慢',
+      p:'連到 IG／FB 影片伺服器要 '+fmt(c.metaMs,0)+' ms，連其他大網站只要 '+fmt(c.ctrlMs,0)+' ms，慢了 '+fmt(c.delta,0)+' ms。這通常是 DNS 把你導到比較遠的節點，或你到 Meta 機房的這段路由品質較差。症狀就是「別的影片都很順，只有 IG／FB 在轉圈」。',
+      ev:'IG／FB '+fmt(c.metaMs,0)+' ms vs 其他網站 '+fmt(c.ctrlMs,0)+' ms',
+      acts:[FIX.dns,FIX.vpn,FIX.resetNet,FIX.privateRelay]});
+    else F.push({sev:'good',tag:'第 3 關 · IG／FB 伺服器',
+      h:'連得到 IG／FB 伺服器，速度跟別家差不多',
+      p:'連 IG／FB 影片伺服器 '+fmt(c.metaMs,0)+' ms，其他大網站 '+fmt(c.ctrlMs,0)+' ms，差距在正常範圍。你的手機找得到最近的 Meta 節點。',
+      ev:'IG／FB '+fmt(c.metaMs,0)+' ms vs 其他網站 '+fmt(c.ctrlMs,0)+' ms',acts:[]});
+  }
+  if(c&&c.metaUnreachable>=2){
+    F.push({sev:'critical',tag:'第 3 關 · IG／FB 伺服器',h:'有 IG／FB 的伺服器完全連不上',
+      p:'有 '+c.metaUnreachable+' 個 Meta 網域完全沒有回應。可能是網路有過濾／封鎖（校園、公司網路、家長監護、廣告阻擋 App），或 DNS 解析失敗。',
+      ev:c.metaUnreachable+' 個 Meta 網域無回應',acts:[FIX.dns,FIX.vpn,FIX.resetNet]});
+  }
+
+  /* --- E. 影片實測 --- */
+  if(v&&v.ok){
+    var vs=[];
+    if(v.startupMs!=null) vs.push('啟動 '+fmt(v.startupMs/1000,1)+' 秒');
+    vs.push('轉圈 '+v.stalls+' 次');
+    if(v.stallSec>0) vs.push('共卡住 '+fmt(v.stallSec,1)+' 秒');
+    if(v.height) vs.push('解析度 '+v.height+'p');
+    if(v.stalls>=2||v.stallSec>=2){
+      F.push({sev:'critical',tag:'第 4 關 · 實測播放',h:'問題重現了：影片在這支手機上真的會轉圈',
+        p:'測試影片在 '+fmt(v.wall,0)+' 秒內轉圈 '+v.stalls+' 次、總共卡住 '+fmt(v.stallSec,1)+' 秒。這代表轉圈不是 IG／FB 的錯覺或 App bug，是這個「手機＋網路」組合真的撐不住串流。請優先照著上面被標紅的那幾項處理。',
+        ev:vs.join(' · '),acts:[]});
+    }else if(v.startupMs!=null&&v.startupMs>4000){
+      F.push({sev:'warning',tag:'第 4 關 · 實測播放',h:'影片開得動，但要等很久才開始',
+        p:'第一格畫面等了 '+fmt(v.startupMs/1000,1)+' 秒才出來（順的話應該在 2 秒內）。播起來之後沒有再卡，所以主要是「起步慢」——通常和連線建立、DNS 解析或訊號初始品質有關。',
+        ev:vs.join(' · '),acts:[FIX.dns,FIX.wifiBand]});
+    }else{
+      F.push({sev:'good',tag:'第 4 關 · 實測播放',h:'測試影片播得很順，沒有轉圈',
+        p:'在測試的這 '+fmt(v.wall,0)+' 秒內，影片沒有卡住。這是很重要的線索：你的網路現在有能力順播影片，那 IG／FB 還在轉圈的話，問題更可能在 App 或手機設定上（請看下面的必查清單），或者只在特定時段／特定地點才發生。',
+        ev:vs.join(' · '),acts:[]});
+    }
+  }else if(v){
+    F.push({sev:'warning',tag:'第 4 關 · 實測播放',h:'這次沒能播出測試影片',
+      p:'可能是瀏覽器擋掉了自動播放，或測試影片的來源連不上。請重測一次；若重測還是這樣，可以直接看上面的網路數據來判斷。',
+      ev:v.error||'無法載入影片來源',acts:[],noHead:true});
+  }
+
+  /* --- F. 網路都好但還是轉圈 → 指向裝置/App --- */
+  var netOK = (dl!=null&&dl>=8) && (loss==null||loss<1) && (jit==null||jit<30);
+  if(netOK && (!v||!v.ok||v.stalls<2)){
+    F.push({sev:'warning',tag:'結論 · 指向手機或 App',
+      h:'網路各項都正常 → 問題最可能在手機或 App 設定',
+      p:'速度夠、線路穩、連得到 Meta 伺服器、測試影片也播得順。這種情況下 IG／FB 還會轉圈，最常見的元凶是三個「省流量／省電」的開關，它們會讓 App 停止預先載入影片，於是你每滑到一則新影片都要從零開始等。這三個是下面必查清單的前三項。',
+      ev:'下載 '+fmt(dl)+' Mbps · 掉包 '+fmt(loss,0)+'% · 抖動 '+fmt(jit,0)+' ms',
+      acts:[FIX.lowDataWifi,FIX.lowDataCell,FIX.lowPower,FIX.igDataSaver,FIX.fbQuality,FIX.appPerm]});
+  }
+
+  /* --- 環境提示 --- */
+  if(env.saveData===true){
+    F.push({sev:'serious',tag:'裝置設定',h:'偵測到你開著「省流量」模式',
+      p:'瀏覽器回報 Save-Data 為開啟。這代表系統或瀏覽器層級的省流量設定是開的，影片會被主動降畫質、也不會預載。',
+      ev:'navigator.connection.saveData = true',
+      acts:[FIX.lowDataWifi,FIX.lowDataCell,FIX.lowPower]});
+  }
+  if(env.inAppBrowser){
+    F.push({sev:'warning',tag:'測試環境',h:'你正在某個 App 的內建瀏覽器裡測試',
+      p:'內建瀏覽器（例如從 IG／FB／LINE 的連結點開）對網路與影片的支援有限，測出來的數字可能偏保守。建議用 Safari 重開這個檔案再測一次，結果比較準。',
+      ev:'User-Agent 顯示為 App 內建瀏覽器',acts:[]});
+  }
+
+  var order={critical:0,serious:1,warning:2,good:3};
+  F.sort(function(a,b){return order[a.sev]-order[b.sev]});
+
+  /* --- 總結（量測失敗的項目不當作結論） --- */
+  var H=F.filter(function(x){return !x.noHead});
+  var top=H.length?H[0]:null;
+  var worst=top?top.sev:'good';
+  var head;
+  if(worst==='critical'){
+    head={sev:'critical',lbl:'找到主因',t:top.h,d:'先處理下面第一張紅色卡片裡的步驟，那是命中率最高的一項。改完回來再測一次，比較數字有沒有變好。'};
+  }else if(worst==='serious'){
+    head={sev:'serious',lbl:'找到可疑點',t:top.h,d:'不是致命問題，但足以造成間歇性轉圈。照著下面的步驟一項項處理，一次只改一項。'};
+  }else if(worst==='warning'){
+    head={sev:'warning',lbl:'有個地方要注意',t:top.h,
+      d:'網路本身量起來沒有大問題。請看下面的說明，並搭配「iPhone 必查清單」的前三項一起處理。'};
+  }else{
+    head={sev:'good',lbl:'一切正常',t:'這次測試沒有量到任何網路問題',
+      d:'代表現在這個時間點、這個網路是好的。轉圈可能只發生在特定時段或地點，也可能是手機端的省流量／省電開關——請看下面的「iPhone 必查清單」，或在下次轉圈的當下馬上重測一次，才抓得到現場。'};
+  }
+  var miss=[];
+  if(!d||!d.ok) miss.push('下載速度');
+  if(!v||!v.ok) miss.push('影片實測');
+  if(!p||!p.ok) miss.push('延遲與掉包');
+  if(miss.length) head.d+='（注意：這次沒量到「'+miss.join('」「')+'」，結論僅供參考，建議換個網路或稍後再測一次。）';
+  return {findings:F, head:head};
+}
+
+/* =========================================================================
+   8. 繪圖
+   ========================================================================= */
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function drawChart(container,all){
+  if(!all||all.length<2){ container.innerHTML='<p class="muted">樣本不足，無法繪製曲線。</p>'; return; }
+  // 第一個取樣點含連線建立時的緩衝突波，會壓扁整條線 — 樣本夠多時捨去
+  var samples = all.length>4 ? all.slice(1) : all;
+  var W=600,H=230,ml=44,mr=16,mt=18,mb=30;
+  var xs=samples.map(function(s){return s.t}), ys=samples.map(function(s){return s.mbps});
+  var xmin=0, xmax=Math.max.apply(null,xs);
+  var ymax=Math.max(Math.max.apply(null,ys)*1.15, 6);
+  var X=function(v){return ml+(v-xmin)/(xmax-xmin||1)*(W-ml-mr)};
+  var Y=function(v){return H-mb-(v/ymax)*(H-mt-mb)};
+  var grid=cssv('--grid'), axis=cssv('--axis'), muted=cssv('--muted'),
+      s1=cssv('--series-1'), ink=cssv('--ink'), warn=cssv('--warn');
+
+  var ticks=[], raw=ymax/4, ex=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10)), fr=raw/ex;
+  var step=(fr<1.5?1:(fr<3?2:(fr<7?5:10)))*ex;
+  for(var y=0;y<=ymax;y+=step) ticks.push(step<1? Math.round(y*10)/10 : Math.round(y));
+
+  var path=samples.map(function(s,i){return (i?'L':'M')+X(s.t).toFixed(1)+' '+Y(s.mbps).toFixed(1)}).join(' ');
+  var area=path+' L'+X(xs[xs.length-1]).toFixed(1)+' '+Y(0)+' L'+X(xs[0]).toFixed(1)+' '+Y(0)+' Z';
+
+  var maxI=ys.indexOf(Math.max.apply(null,ys)), minI=ys.indexOf(Math.min.apply(null,ys));
+  function lbl(i,txt,anchor){
+    var x=X(xs[i]), y=Y(ys[i]);
+    return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4" fill="'+s1+'" stroke="'+cssv('--surface')+'" stroke-width="2"/>'+
+           '<text x="'+(anchor==='end'?x-8:x+8).toFixed(1)+'" y="'+(y-9).toFixed(1)+'" fill="'+ink+'" font-size="12" font-weight="620" text-anchor="'+anchor+'">'+txt+'</text>';
+  }
+
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="下載速度隨時間變化折線圖">'+
+    '<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+s1+'" stop-opacity=".22"/><stop offset="100%" stop-color="'+s1+'" stop-opacity="0"/>'+
+    '</linearGradient></defs>';
+  ticks.forEach(function(t){
+    svg+='<line x1="'+ml+'" y1="'+Y(t).toFixed(1)+'" x2="'+(W-mr)+'" y2="'+Y(t).toFixed(1)+'" stroke="'+grid+'" stroke-width="1"/>'+
+         '<text x="'+(ml-8)+'" y="'+(Y(t)+4).toFixed(1)+'" fill="'+muted+'" font-size="11" text-anchor="end">'+t+'</text>';
+  });
+  if(ymax>5){
+    svg+='<line x1="'+ml+'" y1="'+Y(5).toFixed(1)+'" x2="'+(W-mr)+'" y2="'+Y(5).toFixed(1)+'" stroke="'+warn+'" stroke-width="2" stroke-dasharray="5 4"/>'+
+         '<text x="'+(W-mr)+'" y="'+(Y(5)-7).toFixed(1)+'" fill="'+muted+'" font-size="11" text-anchor="end">1080p 順播門檻 5 Mbps</text>';
+  }
+  svg+='<line x1="'+ml+'" y1="'+Y(0)+'" x2="'+(W-mr)+'" y2="'+Y(0)+'" stroke="'+axis+'" stroke-width="1"/>';
+  svg+='<path d="'+area+'" fill="url(#g1)"/>';
+  svg+='<path d="'+path+'" fill="none" stroke="'+s1+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  svg+=lbl(maxI,'最高 '+fmt(ys[maxI])+' Mbps', maxI>samples.length*0.6?'end':'start');
+  if(minI!==maxI) svg+=lbl(minI,'最低 '+fmt(ys[minI]), minI>samples.length*0.6?'end':'start');
+  svg+='<text x="'+ml+'" y="'+(H-8)+'" fill="'+muted+'" font-size="11">0 秒</text>'+
+       '<text x="'+(W-mr)+'" y="'+(H-8)+'" fill="'+muted+'" font-size="11" text-anchor="end">'+fmt(xmax,0)+' 秒</text>'+
+       '<text x="'+(ml-8)+'" y="'+(mt-4)+'" fill="'+muted+'" font-size="11" text-anchor="end">Mbps</text>';
+  svg+='<g id="cross" opacity="0"><line y1="'+mt+'" y2="'+Y(0)+'" stroke="'+axis+'" stroke-width="1"/>'+
+       '<circle r="5" fill="'+s1+'" stroke="'+cssv('--surface')+'" stroke-width="2"/></g>';
+  svg+='<rect x="'+ml+'" y="'+mt+'" width="'+(W-ml-mr)+'" height="'+(H-mt-mb)+'" fill="transparent" id="hit"/>';
+  svg+='</svg><div class="tip" id="tip"></div>';
+  container.innerHTML=svg;
+
+  var el=container.querySelector('svg'), hit=container.querySelector('#hit'),
+      cross=container.querySelector('#cross'), tip=container.querySelector('#tip');
+  function move(ev){
+    var r=el.getBoundingClientRect();
+    var px=((ev.touches?ev.touches[0].clientX:ev.clientX)-r.left)/r.width*W;
+    var best=0,bd=1e9;
+    samples.forEach(function(s,i){ var d=Math.abs(X(s.t)-px); if(d<bd){bd=d;best=i} });
+    var s=samples[best], x=X(s.t), y=Y(s.mbps);
+    cross.setAttribute('opacity','1');
+    cross.querySelector('line').setAttribute('x1',x); cross.querySelector('line').setAttribute('x2',x);
+    cross.querySelector('circle').setAttribute('cx',x); cross.querySelector('circle').setAttribute('cy',y);
+    tip.style.opacity='1';
+    tip.style.left=(x/W*r.width)+'px'; tip.style.top=(y/H*r.height)+'px';
+    tip.innerHTML='<b>'+fmt(s.mbps)+' Mbps</b><br><span style="color:var(--muted)">第 '+fmt(s.t,1)+' 秒</span>';
+  }
+  function out(){ cross.setAttribute('opacity','0'); tip.style.opacity='0'; }
+  hit.addEventListener('mousemove',move); hit.addEventListener('mouseleave',out);
+  hit.addEventListener('touchstart',move,{passive:true}); hit.addEventListener('touchmove',move,{passive:true});
+  hit.addEventListener('touchend',out);
+}
+
+function meter(label,value,unit,zones,verdict,note){
+  // zones: [{to:number, sev:'good'|'warning'|'serious'|'critical'}] ascending; last to = max
+  var max=zones[zones.length-1].to;
+  var pct=value==null? 0 : Math.max(3,Math.min(100, value/max*100));
+  var sev='good';
+  if(value!=null) for(var i=0;i<zones.length;i++){ if(value<=zones[i].to){ sev=zones[i].sev; break; } sev=zones[zones.length-1].sev; }
+  var col={good:'var(--good)',warning:'var(--warn)',serious:'var(--serious)',critical:'var(--crit)'}[sev];
+  var ink={good:'var(--good-ink)',warning:'var(--warn-ink)',serious:'var(--serious-ink)',critical:'var(--crit-ink)'}[sev];
+  var icon={good:'✓',warning:'!',serious:'!',critical:'✕'}[sev];
+  var marks='';
+  for(var j=0;j<zones.length-1;j++) marks+='<u style="left:'+(zones[j].to/max*100).toFixed(1)+'%"></u>';
+  return '<div class="meter"><div class="head"><b>'+label+'</b>'+
+    '<span style="color:'+ink+';font-weight:620">'+icon+' '+(value==null?'—':fmt(value, unit==='Mbps'?1:0))+' '+unit+'　'+verdict[sev]+'</span></div>'+
+    '<div class="track"><i style="width:'+pct.toFixed(1)+'%;background:'+col+'"></i>'+marks+'</div>'+
+    '<div class="note">'+note+'</div></div>';
+}
+
+/* =========================================================================
+   9. 流程控制
+   ========================================================================= */
+var STAGES=[
+  {k:'env',   n:'掃描裝置與環境',        w:2},
+  {k:'ping',  n:'測連線反應與穩定度',    w:14},
+  {k:'video', n:'實際播一段影片試試',    w:26},
+  {k:'dl',    n:'測下載速度與持久力',    w:16},
+  {k:'up',    n:'測上傳速度',            w:8},
+  {k:'cdn',   n:'比對 IG／FB 伺服器',    w:12}
+];
+var TOTALW=STAGES.reduce(function(a,b){return a+b.w},0);
+
+function renderSteps(activeIdx){
+  var html='';
+  STAGES.forEach(function(s,i){
+    var cls=i<activeIdx?'done':(i===activeIdx?'active':'');
+    var m=i<activeIdx?'✓':(i===activeIdx?'▸':'·');
+    html+='<li class="'+cls+'"><span class="m">'+m+'</span><span>'+s.n+'</span></li>';
+  });
+  $('#stepList').innerHTML=html;
+}
+function setProgress(idx,frac){
+  var before=STAGES.slice(0,idx).reduce(function(a,b){return a+b.w},0);
+  var pct=(before+STAGES[idx].w*(frac||0))/TOTALW*100;
+  $('#progBar').style.width=pct.toFixed(1)+'%';
+}
+
+var HINTS={
+  env:'讀取系統資訊…',
+  ping:'連續發送 20 次小請求，量反應時間與有沒有掉包',
+  video:'這一段最重要——直接重現轉圈',
+  dl:'持續下載約 16 秒，看速度撐不撐得住',
+  up:'順便量一下上傳',
+  cdn:'比對連 IG／FB 和連其他大網站的速度差'
+};
+
+var RESULTS=null;
+
+async function run(){
+  ABORTED=false;
+  $('#intro').classList.add('hidden');
+  $('#result').classList.add('hidden');
+  $('#running').classList.remove('hidden');
+  var R={};
+
+  try{
+    // 0 env
+    renderSteps(0); $('#stageTitle').textContent=STAGES[0].n; $('#stageHint').textContent=HINTS.env;
+    setProgress(0,0.3); R.env=envScan(); await sleep(500); setProgress(0,1);
+
+    // 1 ping
+    renderSteps(1); $('#stageTitle').textContent=STAGES[1].n; $('#stageHint').textContent=HINTS.ping;
+    R.ping=await pingTest(20,function(f){setProgress(1,f)});
+
+    // 2 video
+    renderSteps(2); $('#stageTitle').textContent=STAGES[2].n; $('#stageHint').textContent=HINTS.video;
+    setProgress(2,0.1);
+    var vt=setInterval(function(){ /* 影片階段用時間近似進度 */ },1000);
+    var vStart=now();
+    var vTick=setInterval(function(){ setProgress(2, Math.min(0.97,(now()-vStart)/24000)) },500);
+    R.video=await videoTest($('#vid'),22000,function(m){ $('#vidStatus').textContent=m; }, R.env.hlsNative);
+    clearInterval(vTick); clearInterval(vt); setProgress(2,1);
+    $('#vidStatus').textContent = R.video.ok
+      ? ('播放測試完成 — 轉圈 '+R.video.stalls+' 次')
+      : '無法播放測試影片（結果以網路數據為準）';
+
+    // 3 download
+    renderSteps(3); $('#stageTitle').textContent=STAGES[3].n; $('#stageHint').textContent=HINTS.dl;
+    R.dl=await downloadTest(16000,function(f){setProgress(3,f)}); setProgress(3,1);
+
+    // 4 upload
+    renderSteps(4); $('#stageTitle').textContent=STAGES[4].n; $('#stageHint').textContent=HINTS.up;
+    setProgress(4,0.3); R.up=await uploadTest(8000); setProgress(4,1);
+
+    // 5 cdn
+    renderSteps(5); $('#stageTitle').textContent=STAGES[5].n; $('#stageHint').textContent=HINTS.cdn;
+    R.cdn=await cdnTest(function(f){setProgress(5,f)}); setProgress(5,1);
+
+    RESULTS=R;
+    renderResult(R);
+  }catch(e){
+    if(e.message!=='aborted'){
+      $('#stageTitle').textContent='檢測中斷';
+      $('#stageHint').textContent='發生錯誤：'+e.message+'（請重新整理再試一次）';
+    }else{
+      $('#running').classList.add('hidden'); $('#intro').classList.remove('hidden');
+    }
+  }
+}
+
+/* =========================================================================
+   10. 結果畫面
+   ========================================================================= */
+var CHECKLIST=[
+  {t:'低數據模式（Wi‑Fi）', hit:'命中率最高', f:FIX.lowDataWifi},
+  {t:'低數據模式（行動網路）', hit:'命中率最高', f:FIX.lowDataCell},
+  {t:'低耗電模式', hit:'命中率最高', f:FIX.lowPower},
+  {t:'Instagram「使用較少行動數據」', hit:'IG 專屬', f:FIX.igDataSaver},
+  {t:'Facebook 影片畫質設定', hit:'FB 專屬', f:FIX.fbQuality},
+  {t:'App 的數據與背景權限', hit:'常被忽略', f:FIX.appPerm},
+  {t:'改用 5GHz Wi‑Fi', hit:'家中必試', f:FIX.wifiBand},
+  {t:'重開數據機與路由器', hit:'家中必試', f:FIX.reboot},
+  {t:'換 DNS', hit:'只有 IG/FB 慢時', f:FIX.dns},
+  {t:'關閉 VPN', hit:'有裝才需要', f:FIX.vpn},
+  {t:'更新 iOS', hit:'順手做', f:FIX.iosUpdate},
+  {t:'重置網路設定', hit:'前面都無效再做', f:FIX.resetNet},
+  {t:'iCloud 私密轉送', hit:'只影響 Safari', f:FIX.privateRelay},
+  {t:'刪除重裝 App', hit:'最後手段', f:FIX.reinstall}
+];
+
+function actList(acts){
+  if(!acts||!acts.length) return '';
+  return '<ol class="acts">'+acts.map(function(a){
+    return '<li><b>'+a.t+'</b><br><span class="path">'+a.p+'</span><span class="why">'+a.w+'</span></li>';
+  }).join('')+'</ol>';
+}
+
+function renderResult(R){
+  var D=diagnose(R), env=R.env, p=R.ping, d=R.dl, v=R.video, c=R.cdn, u=R.up;
+  var dotc={critical:'var(--crit)',serious:'var(--serious)',warning:'var(--warn)',good:'var(--good)'};
+  var icon={critical:'✕',serious:'!',warning:'!',good:'✓'};
+  var h='';
+
+  /* 總結 */
+  h+='<div class="verdict '+D.head.sev+'"><div class="lbl"><span class="dot" style="background:'+dotc[D.head.sev]+'"></span>'+D.head.lbl+'</div>'+
+     '<h2>'+D.head.t+'</h2><p>'+D.head.d+'</p></div>';
+
+  /* stat tiles */
+  function tile(k,val,unit,sub,sev){
+    return '<div class="tile"><span class="k">'+k+'</span><div class="v">'+val+(unit?'<small>'+unit+'</small>':'')+'</div>'+
+      (sub?'<div class="s" style="color:'+(sev?dotc[sev]:'var(--muted)')+'">'+(sev?icon[sev]+' ':'')+sub+'</div>':'')+'</div>';
+  }
+  var dlv=d&&d.ok?d.mbps:null;
+  var dlsev = dlv==null?null : (dlv<3?'critical':(dlv<5.5?'serious':'good'));
+  var losssev = p&&p.ok? (p.lossPct>=5?'critical':(p.lossPct>=1?'serious':'good')) : null;
+  var jitsev  = p&&p.ok&&p.jitter!=null? (p.jitter>=60?'critical':(p.jitter>=30?'serious':'good')) : null;
+  var vsev = v&&v.ok? (v.stalls>=2?'critical':(v.stalls===1?'warning':'good')) : null;
+
+  h+='<div class="tiles">'+
+     tile('下載速度', dlv==null?'—':fmt(dlv), 'Mbps', dlv==null?'測不到':(dlv<3?'撐不起 1080p':(dlv<5.5?'剛好及格':'足夠')), dlsev)+
+     tile('影片轉圈次數', v&&v.ok? v.stalls : '—', v&&v.ok?'次':'', v&&v.ok? (v.stalls?'共卡 '+fmt(v.stallSec,1)+' 秒':'完全沒卡'):'未測到', vsev)+
+     tile('掉包率', p&&p.ok? fmt(p.lossPct,0):'—','%', p&&p.ok?(p.lossPct<1?'健康':'線路不穩'):'', losssev)+
+     tile('網路抖動', p&&p.ok&&p.jitter!=null? fmt(p.jitter,0):'—','ms', p&&p.ok&&p.jitter!=null?(p.jitter<30?'平穩':'忽快忽慢'):'', jitsev)+
+     '</div>';
+
+  /* meters */
+  h+='<div class="card"><h2>四項體檢指標</h2>';
+  h+=meter('下載速度', dlv, 'Mbps', [{to:3,sev:'critical'},{to:5.5,sev:'serious'},{to:25,sev:'good'},{to:Math.max(25,(dlv||0)*1.1),sev:'good'}],
+      {critical:'不足',serious:'勉強',warning:'普通',good:'充足'},
+      '條越長越好。刻度線在 3 與 5.5 Mbps：720p 與 1080p 的順播門檻（Netflix 官方建議值，Meta 未公布觀看端建議）。');
+  h+=meter('掉包率', p&&p.ok?p.lossPct:null, '%', [{to:1,sev:'good'},{to:5,sev:'serious'},{to:100,sev:'critical'}],
+      {critical:'嚴重',serious:'偏高',warning:'偏高',good:'健康'},
+      '條越短越好。影片最怕「斷」不怕「慢」——Cisco 建議影像流量掉包 &lt; 0.5%，串流放寬到 1% 以內都算健康。');
+  h+=meter('網路抖動', p&&p.ok?p.jitter:null, 'ms', [{to:30,sev:'good'},{to:60,sev:'serious'},{to:200,sev:'critical'}],
+      {critical:'嚴重',serious:'偏大',warning:'偏大',good:'平穩'},
+      '條越短越好。抖動大＝資料忽快忽慢地到，這就是「測速很快、影片卻一直轉圈」最常見的解釋。');
+  h+=meter('連線延遲', p&&p.ok?p.median:null, 'ms', [{to:150,sev:'good'},{to:300,sev:'warning'},{to:1000,sev:'serious'}],
+      {critical:'很高',serious:'偏高',warning:'尚可',good:'很好'},
+      '條越短越好。對有緩衝的影片來說延遲不是致命傷，超過 300 ms 才要懷疑被繞路（VPN／代理／遠端伺服器）。');
+  h+='</div>';
+
+  /* chart */
+  h+='<div class="card"><h2>下載速度撐得住嗎</h2>'+
+     '<p class="muted" style="margin-bottom:10px">看的是「線有沒有一路維持在虛線之上」。線在虛線以下、或一路往右下掉，就是影片會卡的形狀。</p>'+
+     '<div class="chartbox" id="chartBox"></div>'+
+     '<div class="legendrow"><span><i class="swatch" style="background:var(--series-1)"></i>下載速度</span>'+
+     '<span><i class="swatch" style="background:var(--warn)"></i>1080p 順播門檻</span></div>'+
+     '<details style="margin-top:12px;border:0"><summary style="padding:8px 0;font-size:.85rem;color:var(--ink-2)">改看數字表格</summary>'+
+     '<div class="body" style="padding:0" id="tableBox"></div></details></div>';
+
+  /* findings */
+  h+='<h2 style="margin:24px 0 12px">逐項診斷</h2>';
+  D.findings.forEach(function(f){
+    h+='<div class="finding '+f.sev+'"><div class="tag"><span class="dot" style="background:'+dotc[f.sev]+'"></span>'+f.tag+'</div>'+
+       '<h3>'+f.h+'</h3><p>'+f.p+'</p>'+(f.ev?'<div class="ev">量到的數據：'+f.ev+'</div>':'')+actList(f.acts)+'</div>';
+  });
+
+  /* checklist */
+  h+='<h2 style="margin:26px 0 6px">iPhone 必查清單</h2>'+
+     '<p class="sub">有些原因是網頁量不到的（例如省電、省流量開關），只能靠你去看一眼。由上而下就是命中率高低的順序，每一項花不到 20 秒。'+IOS_NOTE+'</p>';
+  CHECKLIST.forEach(function(x,i){
+    h+='<details><summary><span>'+(i+1)+'. '+x.t+'</span><span class="hitrate">'+x.hit+'</span></summary>'+
+       '<div class="body"><span class="path">'+x.f.p+'</span><p style="margin-top:9px;margin-bottom:0">'+x.f.w+'</p></div></details>';
+  });
+
+  /* raw data */
+  h+='<h2 style="margin:26px 0 10px">原始數據</h2><div class="card"><table><tbody>';
+  function row(k,val){ h+='<tr><td>'+k+'</td><td>'+val+'</td></tr>'; }
+  row('測試時間',env.when);
+  row('裝置',(env.isiOS?'iPhone / iPad':'非 iOS 裝置')+(env.iosVersion?' · iOS '+env.iosVersion:''));
+  row('瀏覽器',env.inAppBrowser?'App 內建瀏覽器':(env.isSafari?'Safari':'其他'));
+  row('螢幕',env.screen);
+  row('下載速度', d&&d.ok? fmt(d.mbps)+' Mbps（尖峰 '+fmt(d.peak)+'／最低 '+fmt(d.low)+'）':'測不到');
+  row('下載前段 → 後段', d&&d.ok&&d.head!=null? fmt(d.head)+' → '+fmt(d.tail)+' Mbps':'—');
+  row('下載總量', d&&d.bytes? fmt(d.bytes/1048576,1)+' MB':'—');
+  row('上傳速度', u&&u.ok? fmt(u.mbps)+' Mbps':'測不到');
+  row('延遲（中位／最低／最高）', p&&p.ok? fmt(p.median,0)+' / '+fmt(p.min,0)+' / '+fmt(p.max,0)+' ms':'測不到');
+  row('抖動', p&&p.ok&&p.jitter!=null? fmt(p.jitter,0)+' ms':'—');
+  row('掉包率', p&&p.ok? fmt(p.lossPct,0)+'%':'—');
+  row('IG／FB 伺服器', c&&c.metaMs!=null? fmt(c.metaMs,0)+' ms':'測不到');
+  row('對照組（其他大網站）', c&&c.ctrlMs!=null? fmt(c.ctrlMs,0)+' ms':'測不到');
+  row('影片啟動時間', v&&v.ok&&v.startupMs!=null? fmt(v.startupMs/1000,1)+' 秒':'—');
+  row('影片轉圈', v&&v.ok? v.stalls+' 次 / 卡住 '+fmt(v.stallSec,1)+' 秒 / 觀察 '+fmt(v.wall,0)+' 秒':'—');
+  row('影片解析度', v&&v.ok&&v.height? v.height+'p':'—');
+  h+='</tbody></table></div>';
+
+  h+='<div class="row" style="margin-top:16px"><button class="btn ghost small" id="copyBtn" type="button">複製報告文字</button>'+
+     '<button class="btn small" id="againBtn" type="button">再測一次</button></div>'+
+     '<p class="muted" style="margin-top:12px">建議做法：先照著紅色卡片改一項，然後回來按「再測一次」，看數字有沒有變好。一次只改一項，才知道是哪一項有效。</p>';
+
+  $('#result').innerHTML=h;
+  $('#running').classList.add('hidden');
+  $('#result').classList.remove('hidden');
+  window.scrollTo(0,0);
+
+  window.__redraw=function(){ if(d&&d.samples) drawChart($('#chartBox'),d.samples); };
+  if(d&&d.samples) drawChart($('#chartBox'),d.samples);
+  if(d&&d.samples&&d.samples.length){
+    var tb='<table><thead><tr><th>時間</th><th>下載速度</th></tr></thead><tbody>'+
+      d.samples.map(function(s){return '<tr><td>第 '+fmt(s.t,1)+' 秒</td><td>'+fmt(s.mbps)+' Mbps</td></tr>'}).join('')+
+      '</tbody></table>';
+    $('#tableBox').innerHTML=tb;
+  }
+
+  $('#againBtn').addEventListener('click',run);
+  $('#copyBtn').addEventListener('click',function(){
+    var lines=['【影片轉圈圈健檢報告】','時間：'+env.when,
+      '裝置：'+(env.iosVersion?'iOS '+env.iosVersion:env.ua.slice(0,60)),
+      '下載：'+(d&&d.ok?fmt(d.mbps)+' Mbps':'測不到'),
+      '上傳：'+(u&&u.ok?fmt(u.mbps)+' Mbps':'測不到'),
+      '延遲：'+(p&&p.ok?fmt(p.median,0)+' ms':'—')+'　抖動：'+(p&&p.ok&&p.jitter!=null?fmt(p.jitter,0)+' ms':'—')+'　掉包：'+(p&&p.ok?fmt(p.lossPct,0)+'%':'—'),
+      'IG/FB 伺服器：'+(c&&c.metaMs!=null?fmt(c.metaMs,0)+' ms':'—')+'（對照組 '+(c&&c.ctrlMs!=null?fmt(c.ctrlMs,0)+' ms':'—')+'）',
+      '影片實測：'+(v&&v.ok? '轉圈 '+v.stalls+' 次、卡住 '+fmt(v.stallSec,1)+' 秒':'未測到'),
+      '','診斷結論：'+D.head.t];
+    D.findings.slice(0,4).forEach(function(f){ lines.push('· ['+f.sev+'] '+f.h); });
+    var txt=lines.join('\n');
+    var ok=function(){ $('#copyBtn').textContent='已複製 ✓'; setTimeout(function(){$('#copyBtn').textContent='複製報告文字'},1800); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok,function(){prompt('請手動複製：',txt)});
+    else prompt('請手動複製：',txt);
+  });
+}
+
+/* ---------------- boot ---------------- */
+$('#startBtn').addEventListener('click',run);
+$('#abortBtn').addEventListener('click',function(){ ABORTED=true; });
+$('#footNote').innerHTML='本工具只在你的瀏覽器裡執行，不會上傳任何個人資料；測速需要連到公開的測速與影片伺服器。'+
+  '判讀門檻參考 Netflix 官方建議速度與 Cisco 影像 QoS 門檻；Meta 未公布觀看端頻寬建議。iOS 設定路徑驗證於 iOS 26.6。';
+</script>
+</body>
+</html>

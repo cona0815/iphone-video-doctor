@@ -1,0 +1,4 @@
+node_modules/
+shots/
+*.webm
+.DS_Store
